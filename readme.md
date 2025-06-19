@@ -8,9 +8,9 @@ Evaluating LLMs is both notoriously challenging and yet critical before confiden
 
 HyperEvals provides hyperband-optimized parallelized prompt and model parameter tuning for evaluating LLMs, inspired by W&B's sweeps combined with hyperband optimization.
 
-<img width="673" alt="image" src="https://github.com/user-attachments/assets/dd2c7745-4d1e-47c8-a083-382f6f62449b" />
 
-After running the automated improvement algorithm:
+<img width="905" alt="Screenshot 2025-06-19 at 9 27 03 AM" src="https://github.com/user-attachments/assets/2535e554-4c8e-4fdd-b84a-4c3e4aca7525" />
+
 <img width="420" alt="image" src="https://github.com/user-attachments/assets/e2d99382-5e7d-40ba-9521-ffc1a5e0a5c3" />
 
 
@@ -19,26 +19,6 @@ After running the automated improvement algorithm:
 
 ```bash
 pip install hyperevals
-```
-
-For development installation:
-```bash
-git clone https://github.com/griffintarpenning/hyperevals.git
-cd hyperevals
-pip install -e ".[dev]"
-```
-
-## Quick Start
-
-```bash
-# Install the package
-pip install hyperevals
-
-# Run with a configuration file
-hyperevals run config.yaml
-
-# Show version
-hyperevals --version
 ```
 
 ## Usage
@@ -57,13 +37,16 @@ hyperevals --version
 ### Sample Configuration
 
 ```yaml
-dataset: /data/test.csv
-model: /models/test.py
-scorer: /scorers/scorer.py
-max_parallelism: 2  
+dataset: data/diseases.csv
+model: models/simple_model.py
+scorer: scorers/basic_scorer.py
+prompts: prompts
+results_dir: results
+num_examples: 5
+sort: random
 hyperband:
-  min_examples: 10
-  bands: [10, 20, 30, 40, 50]
+  num_trials: 2
+  min_examples: 1
 ```
 
 ## TODO
