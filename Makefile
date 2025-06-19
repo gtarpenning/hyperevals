@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test lint format type-check clean build publish
+.PHONY: help install install-dev test lint format type-check clean build publish build-upgrade
 
 help:
 	@echo "Available commands:"
@@ -11,6 +11,7 @@ help:
 	@echo "  clean        Clean build artifacts"
 	@echo "  build        Build the package"
 	@echo "  publish      Publish to PyPI"
+	@echo "  build-upgrade Upgrade the package version and build it"
 
 install:
 	pip install .
@@ -22,11 +23,11 @@ test:
 	pytest tests/ -v
 
 lint:
-	flake8 hyperevals/ tests/
+	flake8 hyperevals/
 
 format:
-	black hyperevals/ tests/
-	isort hyperevals/ tests/
+	black hyperevals/
+	isort hyperevals/
 
 type-check:
 	mypy hyperevals/
@@ -40,6 +41,18 @@ clean:
 
 build: clean
 	python -m build
+
+build-upgrade:
+	@echo "Upgrading version..."
+	@current_version=$$(grep '^version = ' pyproject.toml | head -1 | sed 's/version = "\(.*\)"/\1/'); \
+	major=$$(echo $$current_version | cut -d. -f1); \
+	minor=$$(echo $$current_version | cut -d. -f2); \
+	patch=$$(echo $$current_version | cut -d. -f3); \
+	new_patch=$$((patch + 1)); \
+	new_version="$$major.$$minor.$$new_patch"; \
+	echo "Upgrading from $$current_version to $$new_version"; \
+	sed -i.bak "s/^version = \"$$current_version\"/version = \"$$new_version\"/" pyproject.toml && rm pyproject.toml.bak; \
+	$(MAKE) build
 
 publish: build
 	python -m twine upload dist/*
