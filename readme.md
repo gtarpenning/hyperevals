@@ -51,7 +51,6 @@ hyperevals --version
 
 ```yaml
 dataset: /data/test.csv
-prompt_template: /prompts/test.txt
 model: /models/test.py
 scorer: /scorers/scorer.py
 max_parallelism: 2  
@@ -59,3 +58,16 @@ hyperband:
   min_examples: 10
   bands: [10, 20, 30, 40, 50]
 ```
+
+## TODO
+- multi-step scorers for agent evals
+
+
+Shape of the eval output:
+| id | step | input | output | score |
+|----|------|-------|--------|-------|
+| 1  | 1    | "Hey, whats your name?" | "My name is John" | 0.95 |
+| 1  | 2    | "What is your favorite color?" | "My favorite color is blue" | 0.95 |
+| 1  | 3    | "What is your favorite food?" | "My favorite food is pizza" | 0.95 |
+| 2  | 1    | "What is your name?" | "My name is John" | 0.95 |
+| 2  | 2    | "Wow great!" | "..." | 0.95 |

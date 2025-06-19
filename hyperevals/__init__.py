@@ -21,8 +21,8 @@ __all__ = [
     "__author__",
     "__email__",
     # "HyperEvals",
-    # "Config", 
+    # "Config",
     # "Dataset",
     # "Model",
     # "Scorer",
-] 
+]

@@ -3,8 +3,9 @@ Tests for the CLI module.
 """
 
 import pytest
-from hyperevals.cli import main, create_parser
+
 from hyperevals import __version__
+from hyperevals.cli import create_parser, main
 
 
 def test_version_flag():
@@ -17,11 +18,11 @@ def test_create_parser():
     """Test that the argument parser is created correctly."""
     parser = create_parser()
     assert parser.prog == "hyperevals"
-    
+
     # Test parsing version flag
     args = parser.parse_args(["--version"])
     assert args.version is True
-    
+
     # Test parsing config file
     args = parser.parse_args(["config.yaml"])
     assert args.config == "config.yaml"
@@ -36,4 +37,4 @@ def test_main_without_args():
 def test_main_with_config():
     """Test main function with config file."""
     result = main(["config.yaml"])
-    assert result == 0 
+    assert result == 0

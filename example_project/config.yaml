@@ -1,0 +1,3 @@
+dataset: data/test.csv
+model: models/gpt_model.py
+scorer: scorers/basic_scorer.py 
