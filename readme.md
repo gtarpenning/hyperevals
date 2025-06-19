@@ -10,6 +10,10 @@ HyperEvals provides hyperband-optimized parallelized prompt and model parameter 
 
 <img width="673" alt="image" src="https://github.com/user-attachments/assets/dd2c7745-4d1e-47c8-a083-382f6f62449b" />
 
+After running the automated improvement algorithm:
+<img width="420" alt="image" src="https://github.com/user-attachments/assets/e2d99382-5e7d-40ba-9521-ffc1a5e0a5c3" />
+
+
 
 ## Installation
 
