@@ -1,0 +1,5 @@
+{"id": 1, "step": 1, "input": "Decreased urine output, fluid retention, fatigue", "output": "Acute kidney injury.", "expected": "Acute Kidney Injury", "score": 85.0, "errors": []}
+{"id": 2, "step": 1, "input": "Reduced hearing sensitivity, muffled or blocked sound", "output": "Eustachian tube dysfunction.", "expected": "Conductive Hearing Loss", "score": 20.0, "errors": []}
+{"id": 3, "step": 1, "input": "Excessive tearing, eye discharge, recurrent eye infections", "output": "Blocked tear duct.", "expected": "Stenosis of the Tear Duct", "score": 75.0, "errors": []}
+{"id": 4, "step": 1, "input": "Difficulty swallowing, unintentional weight loss, chest pain, hoarseness", "output": "Esophageal cancer.", "expected": "Esophageal Cancer", "score": 95.0, "errors": []}
+{"id": 5, "step": 1, "input": "Sudden, brief muscle contractions or jerks, often affecting the arms, legs, or face", "output": "Myoclonus.", "expected": "Myoclonus", "score": 100.0, "errors": []}

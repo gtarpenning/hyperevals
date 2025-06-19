@@ -27,7 +27,10 @@ hyperband:
 ```
 """
 
+import glob
 import json
+import os
+import random
 import subprocess
 import sys
 from datetime import datetime
@@ -43,41 +46,58 @@ from .summary import print_summary
 console = Console()
 
 
-def run_script(script_path: str, input_text: str) -> Tuple[str, str]:
-    """Run script and return (output, error_msg)."""
-    try:
-        if script_path.endswith(".py"):
-            result = subprocess.run(
-                [sys.executable, script_path],
-                input=input_text,
-                text=True,
-                capture_output=True,
-                timeout=30,
-            )
-        else:
-            result = subprocess.run(
-                [script_path],
-                input=input_text,
-                text=True,
-                capture_output=True,
-                timeout=30,
-            )
+def _make_run_name(config: Dict[str, Any]) -> str:
+    """Generate a run name for directories and files."""
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    dataset_name = Path(config["dataset"]).stem
+    model_name = Path(config["model"]).stem
+    scorer_name = Path(config["scorer"]).stem
+    return f"eval-{dataset_name}-{model_name}-{scorer_name}-{timestamp}"
 
-        if result.returncode != 0:
-            error_msg = f"Script failed with code {result.returncode}: {result.stderr}"
-            return result.stdout.strip() if result.stdout else "", error_msg
-        return result.stdout.strip(), ""
-    except Exception as e:
-        error_msg = f"Exception running script: {str(e)}"
-        return "", error_msg
+
+def _make_results_filename(config: Dict[str, Any]) -> str:
+    """Generate a filename for the output file."""
+    return f"{_make_run_name(config)}.jsonl"
 
 
 class Eval:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        # Generate timestamped output filename
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.output_file = f"eval-results-{timestamp}.jsonl"
+        # Create run directory and save results.jsonl inside it
+        self.run_dir = self._create_run_directory()
+        self.output_file = str(self.run_dir / "results.jsonl")
+
+    def _get_results_base_dir(self) -> Path:
+        """Get the base results directory, defaulting to 'results/' if not specified."""
+        results_dir = self.config.get("results_dir", "results")
+        return Path(results_dir)
+
+    def _create_run_directory(self) -> Path:
+        """Create a timestamped run directory within the results folder."""
+        run_name = _make_run_name(self.config)
+        run_dir = self._get_results_base_dir() / run_name
+        run_dir.mkdir(parents=True, exist_ok=True)
+
+        return run_dir
+
+    def _get_prompt_file(self) -> str:
+        """Get the first prompt file from the prompts directory, or empty string if none."""
+        if "prompts" not in self.config:
+            return ""
+
+        prompts_dir = Path(self.config["prompts"])
+        if not prompts_dir.exists():
+            return ""
+
+        # Get all files in prompts directory
+        prompt_files = list(prompts_dir.glob("*"))
+        prompt_files = [f for f in prompt_files if f.is_file()]
+
+        if not prompt_files:
+            return ""
+
+        # Return the first prompt file (sorted for consistency)
+        return str(sorted(prompt_files)[0])
 
     def _save_result(self, result: Dict[str, Any]):
         """Append result to JSONL file."""
@@ -89,12 +109,34 @@ class Eval:
         # Load dataset
         df = pd.read_csv(self.config["dataset"])
         console.print(f"Loaded {len(df)} examples from {self.config['dataset']}")
+
+        # Apply sorting if specified
+        if self.config.get("sort") == "random":
+            df = df.sample(frac=1, random_state=42).reset_index(drop=True)
+            console.print("Dataset order randomized")
+
+        # Limit number of examples if specified
+        num_examples = self.config.get("num_examples")
+        if num_examples is not None and num_examples > 0:
+            original_len = len(df)
+            df = df.head(num_examples)
+            console.print(f"Limited to {len(df)} examples (from {original_len} total)")
+
         console.print(f"Output will be saved to: {self.output_file}")
+
+        # Get prompt file
+        prompt_file = self._get_prompt_file()
+        if prompt_file:
+            console.print(f"Using prompt file: {prompt_file}")
+        else:
+            console.print("No prompt file found, using empty prompt")
 
         # Initialize output file
         Path(self.output_file).unlink(missing_ok=True)
 
         results = []
+        consecutive_errors = 0
+        max_consecutive_errors = 3
 
         with Progress() as progress:
             task = progress.add_task("Evaluating...", total=len(df))
@@ -102,9 +144,12 @@ class Eval:
             for idx, row in df.iterrows():
                 example_id = idx + 1
                 input_text = str(row.get("input", ""))
+                expected_output = str(row.get("expected", ""))
 
-                # Run model
-                model_output, model_error = run_script(self.config["model"], input_text)
+                # Run model with prompt
+                model_output, model_error = run_script(
+                    self.config["model"], input_text, prompt_file
+                )
 
                 # Surface model errors to console
                 if model_error:
@@ -113,9 +158,8 @@ class Eval:
                     )
 
                 # Run scorer
-                scorer_input = f"{input_text}\n---\n{model_output}"
                 score_output, scorer_error = run_script(
-                    self.config["scorer"], scorer_input
+                    self.config["scorer"], input_text, "", model_output, expected_output
                 )
 
                 # Surface scorer errors to console
@@ -137,12 +181,19 @@ class Eval:
                 if scorer_error:
                     errors.append(f"scorer: {scorer_error}")
 
+                # Track consecutive errors
+                if errors:
+                    consecutive_errors += 1
+                else:
+                    consecutive_errors = 0
+
                 # Save result
                 result = {
                     "id": example_id,
                     "step": 1,
                     "input": input_text,
                     "output": model_output,
+                    "expected": expected_output,
                     "score": score,
                     "errors": errors,
                 }
@@ -152,4 +203,68 @@ class Eval:
 
                 progress.advance(task)
 
+                # Check for early stopping due to consecutive errors
+                if consecutive_errors >= max_consecutive_errors:
+                    console.print(
+                        f"\n[red]Stopping evaluation early: {max_consecutive_errors} consecutive errors detected[/red]"
+                    )
+                    console.print(
+                        "This usually indicates a configuration issue with the model or scorer."
+                    )
+
+                    # Save partial results before raising exception
+                    print_summary(results, self.output_file)
+
+                    raise RuntimeError(
+                        f"Evaluation stopped after {max_consecutive_errors} consecutive errors. "
+                        f"Processed {len(results)} examples before stopping. "
+                        f"Please check your model ({self.config['model']}) and scorer ({self.config['scorer']}) configuration. "
+                        f"Common issues include: missing API keys, incorrect file paths, or script execution permissions."
+                    )
+
         print_summary(results, self.output_file)
+        return results
+
+
+def run_script(
+    script_path: str,
+    input_text: str,
+    prompt_file: str = "",
+    model_output: str = "",
+    expected_output: str = "",
+) -> Tuple[str, str]:
+    """Run script and return (output, error_msg)."""
+    try:
+        cmd_args = []
+        if script_path.endswith(".py"):
+            cmd_args = [sys.executable, script_path]
+        else:
+            cmd_args = [script_path]
+
+        # Add prompt parameter if provided
+        if prompt_file:
+            cmd_args.extend(["--prompt", prompt_file])
+
+        # Add model_output parameter if provided (for scorers)
+        if model_output:
+            cmd_args.extend(["--model-output", model_output])
+
+        # Add expected_output parameter if provided (for scorers)
+        if expected_output:
+            cmd_args.extend(["--expected-output", expected_output])
+
+        result = subprocess.run(
+            cmd_args,
+            input=input_text,
+            text=True,
+            capture_output=True,
+            timeout=30,
+        )
+
+        if result.returncode != 0:
+            error_msg = f"Script failed with code {result.returncode}: {result.stderr}"
+            return result.stdout.strip() if result.stdout else "", error_msg
+        return result.stdout.strip(), ""
+    except Exception as e:
+        error_msg = f"Exception running script: {str(e)}"
+        return "", error_msg

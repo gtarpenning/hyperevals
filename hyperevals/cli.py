@@ -11,6 +11,8 @@ import yaml
 
 from . import __version__
 from .eval import Eval
+from .hyperband import Hyperband
+from .summary import print_hyperband_summary
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -42,7 +44,34 @@ def main(args: Optional[List[str]] = None) -> int:
     # Run evaluation
     try:
         eval_instance = Eval(config)
-        eval_instance.run()
+        results = eval_instance.run()
+
+        # Check if hyperband is enabled
+        if "hyperband" in config:
+            hyperband_config = config["hyperband"]
+            num_trials = hyperband_config.get("num_trials", 2)
+
+            print(f"\nHyperband enabled - running {num_trials - 1} additional trials")
+
+            # Store initial results for comparison
+            initial_results = results.copy()
+
+            # Run additional hyperband iterations
+            hyperband = Hyperband(config)
+
+            for trial in range(1, num_trials):
+                print(f"\n=== Hyperband Trial {trial + 1} ===")
+
+                # Generate new prompt based on previous results in the same run directory
+                hyperband.run(results, eval_instance.run_dir)
+
+                # Run evaluation again with new prompt
+                eval_instance = Eval(config)
+                results = eval_instance.run()
+
+            # Show hyperband improvement summary
+            print_hyperband_summary(initial_results, results)
+
         return 0
     except Exception as e:
         print(f"Error running evaluation: {e}")

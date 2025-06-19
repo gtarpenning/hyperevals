@@ -1,3 +1,10 @@
-dataset: data/test.csv
-model: models/gpt_model.py
-scorer: scorers/basic_scorer.py 
+dataset: data/diseases.csv
+model: models/simple_model.py
+scorer: scorers/basic_scorer.py
+prompts: prompts
+results_dir: results
+num_examples: 5
+sort: random
+hyperband:
+  num_trials: 2
+  min_examples: 1

@@ -1,0 +1,29 @@
+
+
+
+                                             Evaluation Summary                                             
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Metric               ┃ Value                                                                             ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Total Examples       │ 5                                                                                 │
+│ Average Score        │ 75.000                                                                            │
+│ Examples with Errors │ 0                                                                                 │
+│ Output File          │ results/eval-diseases-simple_model-basic_scorer-2025-06-19_09-23-16/results.jsonl │
+└──────────────────────┴───────────────────────────────────────────────────────────────────────────────────┘
+
+
+                                                     Sample Results                                                     
+┏━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃  ┃ Input                      ┃ Output                                ┃ Expected                             ┃ Score ┃
+┡━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│  │ Decreased urine output,    │ Acute kidney injury.                  │ Acute Kidney Injury                  │ 85.00 │
+│  │ fluid retenti...           │                                       │                                      │       │
+│  │ Reduced hearing            │ Eustachian tube dysfunction.          │ Conductive Hearing Loss              │ 20.00 │
+│  │ sensitivity, muffled ...   │                                       │                                      │       │
+│  │ Excessive tearing, eye     │ Blocked tear duct.                    │ Stenosis of the Tear Duct            │ 75.00 │
+│  │ discharge, rec...          │                                       │                                      │       │
+│  │ Difficulty swallowing,     │ Esophageal cancer.                    │ Esophageal Cancer                    │ 95.00 │
+│  │ unintentional ...          │                                       │                                      │       │
+│  │ Sudden, brief muscle       │ Myoclonus.                            │ Myoclonus                            │ 100.… │
+│  │ contractions or ...        │                                       │                                      │       │
+└──┴────────────────────────────┴───────────────────────────────────────┴──────────────────────────────────────┴───────┘
