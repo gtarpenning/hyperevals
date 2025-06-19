@@ -8,6 +8,9 @@ Evaluating LLMs is both notoriously challenging and yet critical before confiden
 
 HyperEvals provides hyperband-optimized parallelized prompt and model parameter tuning for evaluating LLMs, inspired by W&B's sweeps combined with hyperband optimization.
 
+<img width="673" alt="image" src="https://github.com/user-attachments/assets/dd2c7745-4d1e-47c8-a083-382f6f62449b" />
+
+
 ## Installation
 
 ```bash
